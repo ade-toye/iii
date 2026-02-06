@@ -1,0 +1,15 @@
+invariants.txt
+
+Authors: Toye Adebayo & Teny Makuach
+Date: 1/31/2026
+
+
+1. Width and Height
+for every UArray2_T array;
+array->height > 0 && array->width > 0; array->size > 0 
+The width, height and size are initialized using the UArray2_new, and 
+they never change for the entire lifetime of array 
+
+2. Unique storage per coordinate 
+For every UArray2_T array, each valid grid position (col, row) 
+refers to exactly one unique element in memory.
