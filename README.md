@@ -1,0 +1,224 @@
+# CS 40 Assignment 2: iii (Interfaces, Implementations, Images)
+
+## Overview
+
+This assignment involves designing and implementing two-dimensional unboxed
+arrays (`UArray2`) and two-dimensional bit arrays (`Bit2`), then using them to
+ solve two problems:
+
+1. **Sudoku Validator** - Verify that a solved Sudoku puzzle is valid
+2. **Unblack Edges** - Remove black edges from a scanned PBM image
+
+---
+
+## Key Concepts
+
+### Boxed vs Unboxed Representations
+
+```
+
+BOXED (e.g., Hanson List, Table, Set):
+┌──────────────────────┐
+│ Container            │
+│ ┌──────┐             │     ┌─────────────┐
+│ │ ptr ─┼─────────────┼────►│ Element A   │  (client allocates)
+│ ├──────┤             │     └─────────────┘
+│ │ ptr ─┼─────────────┼────►┌─────────────┐
+│ ├──────┤             │     │ Element B   │  (client allocates)
+│ │ ptr ─┼─────────────┘     └─────────────┘
+│ └──────┘             │
+│  (only pointers)     │
+└──────────────────────┘
+
+UNBOXED (UArray, UArray2):
+┌────────────────────────────────────────────┐
+│ Container                                  │
+│ ┌─────────────┬─────────────┬────────────┐ │
+│ │ Element A   │ Element B   │ Element C  │ │  (container allocates)
+│ └─────────────┴─────────────┴────────────┘ │
+│  (actual data stored inside)               │
+└────────────────────────────────────────────┘
+```
+
+| Boxed | Unboxed |
+|-------|---------|
+| Stores pointers | Stores actual data |
+| Client allocates elements | Container allocates elements |
+| Elements can outlive container | Elements die with container |
+| Simple interface (just void*) | Must know element size |
+
+---
+
+### 2D Array Implementation (Flattened Row-Major)
+
+For a **5×7 array** (width=5, height=7):
+
+```
+2D Logical View:                          1D Physical Storage:
+     col0  col1  col2  col3  col4
+    ┌─────┬─────┬─────┬─────┬─────┐       ┌────┬────┬────┬────┬────┬────┬────┬─ ─ ─┬────┐
+row0│  0  │  1  │  2  │  3  │  4  │  ───► │ 0  │ 1  │ 2  │ 3  │ 4  │ 5  │ 6  │     │ 34 │
+    ├─────┼─────┼─────┼─────┼─────┤       └────┴────┴────┴────┴────┴────┴────┴─ ─ ─┴────┘
+row1│  5  │  6  │  7  │  8  │  9  │        ▲                        ▲
+    ├─────┼─────┼─────┼─────┼─────┤        │                        │
+row2│ 10  │ 11  │ 12  │ 13  │ 14  │       row 0                    row 1
+    ├─────┼─────┼─────┼─────┼─────┤
+row3│ 15  │ 16  │ 17  │ 18  │ 19  │
+    ├─────┼─────┼─────┼─────┼─────┤       Formula:
+row4│ 20  │ 21  │ 22  │ 23  │ 24  │       index = row × width + col
+    ├─────┼─────┼─────┼─────┼─────┤
+row5│ 25  │ 26  │ 27  │ 28  │ 29  │       Example: (col=3, row=2)
+    ├─────┼─────┼─────┼─────┼─────┤       index = 2 × 5 + 3 = 13
+row6│ 30  │ 31  │ 32  │ 33  │ 34  │
+    └─────┴─────┴─────┴─────┴─────┘
+```
+
+---
+
+### Traversal Orders
+
+```
+ROW-MAJOR ORDER:                          COLUMN-MAJOR ORDER:
+(varies column fastest)                   (varies row fastest)
+
+    0   1   2   3   4                         0   7  14  21  28
+  ┌───┬───┬───┬───┬───┐                     ┌───┬───┬───┬───┬───┐
+  │ → │ → │ → │ → │ → │ ↓                   │ ↓ │ ↓ │ ↓ │ ↓ │ ↓ │
+  ├───┼───┼───┼───┼───┤                     ├───┼───┼───┼───┼───┤
+  │ → │ → │ → │ → │ → │ ↓                   │ ↓ │ ↓ │ ↓ │ ↓ │ ↓ │
+  ├───┼───┼───┼───┼───┤                     ├───┼───┼───┼───┼───┤
+  │ → │ → │ → │ → │ → │                     │ ↓ │ ↓ │ ↓ │ ↓ │   │
+  └───┴───┴───┴───┴───┘                     └───┴───┴───┴───┴───┘
+    5   6   7   8   9                         1   8  15  22  29
+
+Visit: (0,0),(1,0),(2,0)...(4,0),          Visit: (0,0),(0,1),(0,2)...(0,6),
+       (0,1),(1,1),(2,1)...(4,1),...              (1,0),(1,1),(1,2)...(1,6),...
+
+Best for: horizontal processing            Best for: vertical processing
+Cache: optimal (matches storage)           Cache: suboptimal (jumps in memory)
+```
+
+---
+
+## Files
+
+### Core Data Structures
+
+| File | Description |
+|------|-------------|
+| `uarray2.h` | Interface for 2D unboxed arrays |
+| `uarray2.c` | Implementation using Hanson's UArray |
+| `bit2.h` | Interface for 2D bit arrays |
+| `bit2.c` | Implementation using Hanson's Bit |
+
+### Applications
+
+| File | Description |
+|------|-------------|
+| `sudoku.c` | Sudoku puzzle validator |
+| `unblackedges.c` | PBM black edge remover |
+
+### Testing
+
+| File | Description |
+|------|-------------|
+| `useuarray2.c` | Test program for UArray2 |
+| `usebit2.c` | Test program for Bit2 |
+| `correct_useuarray2` | Reference binary for expected output |
+| `correct_usebit2` | Reference binary for expected output |
+
+## Building
+
+Compile on the CS 40 homework servers:
+
+```bash
+make all           # Build everything
+make my_useuarray2 # Build UArray2 test program
+make sudoku        # Build Sudoku validator
+make clean         # Remove compiled files
+```
+
+## API Quick Reference
+
+### UArray2 Interface
+
+```c
+// Create a 2D array with given dimensions and element size
+UArray2_T UArray2_new(int width, int height, int size);
+
+// Free the array
+void UArray2_free(UArray2_T *uarray2);
+
+// Get dimensions and element size
+int UArray2_width(UArray2_T uarray2);
+int UArray2_height(UArray2_T uarray2);
+int UArray2_size(UArray2_T uarray2);
+
+// Access element at (col, row) - returns pointer to internal storage
+void *UArray2_at(UArray2_T uarray2, int col, int row);
+
+// Traverse all elements in row-major or column-major order
+void UArray2_map_row_major(UArray2_T uarray2, apply_fn, void *cl);
+void UArray2_map_col_major(UArray2_T uarray2, apply_fn, void *cl);
+```
+
+### Apply Function Signature
+
+```c
+void apply(int col, int row, UArray2_T a, void *elem, void *cl);
+```
+
+- `col, row` - Current position
+- `a` - The array being traversed
+- `elem` - Pointer to current element
+- `cl` - Closure (user data passed through)
+
+### Implementation Strategy
+
+The 2D array is implemented using a single flattened 1D UArray in **row-major order**:
+
+```
+Element at (col, row) -> index = row * width + col
+```
+
+## Usage Example
+
+```c
+#include "uarray2.h"
+
+typedef int number;
+
+// Create a 5x7 array of integers
+UArray2_T arr = UArray2_new(5, 7, sizeof(number));
+
+// Write to element at (3, 2)
+number *elem = UArray2_at(arr, 3, 2);
+*elem = 42;
+
+// Read from element
+number value = *((number *)UArray2_at(arr, 3, 2));
+
+// Free when done
+UArray2_free(&arr);
+```
+
+## Testing
+
+```bash
+# Build and run the test program
+make my_useuarray2
+./my_useuarray2
+
+# Compare output with reference
+./my_useuarray2 > my_output.txt
+./correct_useuarray2 > correct_output.txt
+diff my_output.txt correct_output.txt
+```
+
+## Lab Answers
+
+See `../new-array-lab/array-lab.txt` for detailed explanations of:
+- Boxed vs unboxed representations
+- 2D array implementation strategies
+- Interface design decisions
+# iii
