@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include "pnmrdr.h"
+#include "except.h"  // for error testing
 #include "assert.h"
 #include "uarray2.h"
 
@@ -28,12 +29,6 @@
  *
  * checked runtime errors (CRE):
  */
-
- void clean_close(UArray2_T board, Pnmrdr_T reader, FILE *fp){
-        UArray2_free(&board);
-        Pnmrdr_free(&reader);
-        if (fp != stdin) fclose(fp);
- }
 static bool validate_col(UArray2_T board, int col) {
     bool seen[10] = {false};
     for (int row = 0; row < 9; row++) {
@@ -85,7 +80,7 @@ static bool validate_box(UArray2_T board, int box_row, int box_col){
     FILE *fp = NULL;
     // Handling arguments
     if (argc > 2){
-        fprintf(stderr, "Usage: %s [input_file]\n", argv[0]);  // remove 
+        fprintf(stderr, "Usage: %s [input_file]\n", argv[0]);
         return EXIT_FAILURE;
     } else if (argc == 2){
         fp = fopen(argv[1], "r");
@@ -147,7 +142,7 @@ static bool validate_box(UArray2_T board, int box_row, int box_col){
     for (int i = 0; i < 9; i++){
         if(!validate_col(board, i) || (!validate_row(board, i))){
             printf("invalid\n");
-            clean_close(board, reader, fp);
+            
             return EXIT_FAILURE;
         } else {
             printf("valid\n");
@@ -158,14 +153,16 @@ static bool validate_box(UArray2_T board, int box_row, int box_col){
     for (int board_col = 0; board_col < 3; board_col++) {
         for (int board_row = 0; board_row < 3; board_row++) {
             if(!validate_box(board, board_col, board_row)){
-                clean_close(board, reader, fp);
                 is_valid = false;
             } 
         }
     }
     // close the file
+    fclose(fp);
     // clean the memory
-    clean_close(board, reader, fp);
+    Pnmrdr_free(&reader);
+    UArray2_free(&board);
+
     if (!is_valid){
     return EXIT_FAILURE;
    }
