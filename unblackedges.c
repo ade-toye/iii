@@ -39,9 +39,24 @@
         if (fp != stdin) fclose(fp);
  }
 
- // is_black function() 
+ 
+ bool is_black(Bit2_T board, int col, int row){
+    return Bit2_get(board, col, row) == 1;
+ }
 
- // add_if_black()
+ void add_if_black(Bit2_T board, Bit2_T visited, int col, int row){
+    if(col < 0 || row < 0 || col >= Bit2_width(board) || row >= Bit2_height(board)) return;
+    if(!(is_black(board, col, row))) return;
+    if(Bit2_get(visited, col, row)) return;
+
+    Bit2_put(visited, col, row, 1);
+
+    add_if_black(board, visited, col-1, row);
+    add_if_black(board, visited, col+1, row);
+    add_if_black(board, visited, col, row - 1);
+    add_if_black(board, visited, col, row + 1);
+    
+ }
 
  int main(int argc, char *argv[]){
 
@@ -80,7 +95,7 @@
             int pixel = Pnmrdr_get(reader);
             printf("pixel is: %d\n", pixel);
             Bit2_put(board, col, row, pixel); 
-             
+            
             // validate the pixel 
             if (!(pixel == 0 || pixel == 1)){
                 fprintf(stderr, "Error: pixel value is not 0 or 1\n");
@@ -89,18 +104,46 @@
             }
         }
     }
+    Bit2_T visited = Bit2_new((int)data.width, (int)data.height);
 
-    // Scan top and bottom boarders
+    // Scan top and bottom borders (only border pixels)
+    for (int col = 0; col < Bit2_width(board); col++) {
+        add_if_black(board, visited, col, 0);                      // top row
+        add_if_black(board, visited, col, Bit2_height(board) - 1); // bottom row
+    }
 
-    // Scan left and right boarders
-
-
-    // remove boarder connected pixels
-
-
-    // Output the unblackedged image
+    // Scan left and right borders (only border pixels)
+    for (int row = 0; row < Bit2_height(board); row++) {
+        add_if_black(board, visited, 0, row);                      // left column
+        add_if_black(board, visited, Bit2_width(board) - 1, row);  // right column
+    }
 
     
+    // remove boarder connected pixels
+     for(int col = 0; col < Bit2_width(board); col++){
+        for(int row = 0; row < Bit2_height(board); row++){
+            if(Bit2_get(visited, col, row)){
+                Bit2_put(board, col, row, 0);
+            }
+        }
+    }
+    
+     for(int col = 0; col < Bit2_width(board); col++){
+        for(int row = 0; row < Bit2_height(board); row++){
+            int value = Bit2_get(board, col, row);
+        }
+
+    }
+    
+    // Output the unblackedged image
+    printf("P1\n%d %d\n", Bit2_width(board), Bit2_height(board));
+    for(int col = 0; col < Bit2_width(board); col++){
+        for(int row = 0; row < Bit2_height(board); row++){
+            int value = Bit2_get(board, col, row);
+        }
+    }
+
+
     // logic
     // Iterate through the board
         // loop through the rows(height)
@@ -112,9 +155,8 @@
     // function to make it white if it is a black edge 
 
     // clean up memory
-    Pnmrdr_free(&reader);
-    Bit2_free(&board);
-    if (fp != stdin) fclose(fp);
+    clean_close(board, reader, fp);
+    Bit2_free(&visited);
     
     return EXIT_SUCCESS;
 }
