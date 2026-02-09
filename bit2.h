@@ -4,131 +4,117 @@
  * Authors: Toye Adebayo & Teny Makuach
  * Date: 1/31/2026
  *
- * Purpose: Defines the public interface for Bit2, a two-dimensional 
- *      bitmap whose elements are bits (0/1). It supports creating 
- *      and freeing a width-by-height grid of bits, reading and 
- *      writing individual bits using (col, row) coordinates, and 
- *      traversing all bits in either row-major or column-major order.
+ * Purpose: Defines the public interface for Bit2, a 2D bitmap
+ *          whose elements are bits (0 or 1). Supports creating
+ *          and freeing a width-by-height grid of bits, reading
+ *          and writing individual bits using (col, row)
+ *          coordinates, and traversing all bits in either
+ *          row-major or column-major order.
  *
- * Key Insight: Bit2 is designed to save space by storing pixels as 
- *      packed bits, which is especially useful for PBM-style black/
- *      white images. Because a single bit does not have its own address 
- *      in memory, the interface uses put/get rather than an 'at' 
- *      function that returns a pointer. The mapping functions provide a 
- *      clean, consistent way to process every bit in the bitmap without 
- *      rewriting traversal loops.
+ * Key Insight: Bit2 saves space by storing pixels as packed
+ *          bits via Hanson's Bit_T. Because a single bit has
+ *          no address, the interface uses put/get rather than
+ *          an 'at' function that returns a pointer.
  */
+
 #ifndef BIT2_INCLUDED
 #define BIT2_INCLUDED
-
 
 #define T Bit2_T
 typedef struct T *T;
 
-
 /*
- * name: Bit2_new
- * purpose: Creates a new bit map struct that holds the metadata 
- * parameters: int width - number of columns in the bit map, 
- *             int height - number of rows in the bit map
- * return: Bit2 - a new Bit2_T struct
- * effect: it creates a Bit2 struct that holds the bits
+ * Bit2_new
+ *
+ * Allocates and returns a new 2D bitmap with the given width
+ * and height. All bits are initialized to 0. The caller is
+ * responsible for freeing the returned bitmap via Bit2_free.
+ *
+ * CRE: width <= 0 or height <= 0.
+ * CRE: memory allocation failure.
  */
 extern T Bit2_new(int width, int height);
 
-
 /*
- * name: Bit2_get
- * purpose: It gets the value of a bit at a given position
- * parameters: T bit2 - the Bit2 struct to access, 
- *             int col - column index of the bit, 
- *             int row - row index of the bit 
- * return: Returns the value of a bit at a given position
- * effect: it accesses the bit at position (col,row)
- */
-extern int Bit2_get(T bit2, int col, int row);
-
-
-/*
- * name: Bit2_put
- * purpose: It inserts the bit value in the Bit2 struct data
- * parameters: T bit2 - the Bit2 struct to update, 
- *             int col - column index of the bit, 
- *             int row - row index of the bit, 
- *             int value - bit value (0 or 1) to store
- * return: bit2 - the previous bit value stored at that position
- * effect: it accesses the index of the bit and inserts the value
- */
-extern int Bit2_put(T bit2, int col, int row, int value);
-
-
-/*
- * name: Bit2_width
- * purpose: It gets the width of a given bit2 struct 
- * parameters: T bit2 - the Bit2 struct whose width is being queried
- * return: Returns the width of a given bit2 struct
- * effect: It accesses the width data from the struct 
- */
-extern int Bit2_width(T bit2);
-
-
-/*
- * name: Bit2_height 
- * purpose: It gets the height of a given but struct
- * parameters: T bit2 - the Bit2 struct whose height is being queried
- * return: Returns the height of a goven bit2 struct
- * effect: It accesses the height data from the struct 
- */
-extern int Bit2_height(T bit2);
-
-
-/*
- * name: Bit2_applyfun
- * purpose: It is a function pointer type for the apply function 
- * parameters: int col - column index of the current bit, 
- *             int row - row index of the current bit, 
- *             T bit2 - the Bit2 struct being traversed, 
- *             int elem - the current bit value (0 or 1), 
- *             void *cl - closure data passed to each call
- * return: void 
- * effect: It is used to apply a function to each element in the bit2  
- */
-typedef void Bit2_applyfun(int col, int row, T bit2, int elem, void *cl);
-
-
-/*
- * name: Bit2_map_col_major
- * purpose: It applies the apply function in col-major order
- * parameters: T bit2 - the Bit2 struct to traverse, 
- *             Bit2_applyfun *apply - function to apply to each bit, 
- *             void *cl - closure data passed to apply
- * return: void
- * effect: It traverses the Bit2 in column-major order and calls apply
- */
-extern void Bit2_map_col_major(T bit2, Bit2_applyfun *apply, void *cl);
-
-
-/*
- * name: map_row_major
- * purpose: It is used to traverse the 2D bit array in row-major format
- * parameters: T bit2 - the Bit2 struct to traverse, 
- *             Bit2_applyfun *apply - function to apply to each bit, 
- *             void *cl - closure data passed to apply 
- * return: void
- * effect: It applies the apply function in row-major order 
- */
-extern void Bit2_map_row_major(T bit2, Bit2_applyfun *apply, void *cl);
-
-
-/*
- * name: Bit2_free
- * purpose: It deallocates the memory of the bit2 struct
- * parameters: T *bit2 - pointer to the Bit2_T to free
- * return: void 
- * effect: It frees the memory allocated to the bit2 struct
+ * Bit2_free
+ *
+ * Deallocates all memory associated with *bit2 and sets *bit2
+ * to NULL. The caller relinquishes ownership of the bitmap.
+ *
+ * CRE: bit2 is NULL or *bit2 is NULL.
  */
 extern void Bit2_free(T *bit2);
 
+/*
+ * Bit2_width
+ *
+ * Returns the width (number of columns) of the bitmap.
+ *
+ * CRE: bit2 is NULL.
+ */
+extern int Bit2_width(T bit2);
+
+/*
+ * Bit2_height
+ *
+ * Returns the height (number of rows) of the bitmap.
+ *
+ * CRE: bit2 is NULL.
+ */
+extern int Bit2_height(T bit2);
+
+/*
+ * Bit2_get
+ *
+ * Returns the bit value (0 or 1) at position (col, row).
+ *
+ * CRE: bit2 is NULL.
+ * CRE: col or row is out of bounds.
+ */
+extern int Bit2_get(T bit2, int col, int row);
+
+/*
+ * Bit2_put
+ *
+ * Sets the bit at position (col, row) to value and returns
+ * the previous bit value that was stored at that position.
+ *
+ * CRE: bit2 is NULL.
+ * CRE: col or row is out of bounds.
+ * CRE: value is not 0 or 1.
+ */
+extern int Bit2_put(T bit2, int col, int row, int value);
+
+/*
+ * Bit2_applyfun
+ *
+ * Function pointer type for the apply function used by mapping
+ * operations. Called once for each bit in the bitmap.
+ */
+typedef void Bit2_applyfun(int col, int row, T bit2, int elem,
+                           void *cl);
+
+/*
+ * Bit2_map_col_major
+ *
+ * Calls the apply function for each bit in column-major order:
+ * all rows of column 0, then column 1, etc.
+ *
+ * CRE: bit2 is NULL or apply is NULL.
+ */
+extern void Bit2_map_col_major(T bit2, Bit2_applyfun *apply,
+                               void *cl);
+
+/*
+ * Bit2_map_row_major
+ *
+ * Calls the apply function for each bit in row-major order:
+ * all columns of row 0, then row 1, etc.
+ *
+ * CRE: bit2 is NULL or apply is NULL.
+ */
+extern void Bit2_map_row_major(T bit2, Bit2_applyfun *apply,
+                               void *cl);
 
 #undef T
 #endif

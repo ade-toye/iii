@@ -68,10 +68,6 @@ main(int argc, char *argv[])
          UArray2_free(&test_array);
 
          printf("The array is %sOK!\n", (OK ? "" : "NOT "));
-        while(test_array == NULL){
-                printf("It's not empty");
-        return EXIT_SUCCESS;
-        }
 
         return 0;
 }
