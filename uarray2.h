@@ -4,136 +4,172 @@
  * Authors: Toye Adebayo & Teny Makuach
  * Date: 1/31/2026
  *
- * Purpose: Defines the public interface for UArray2, a 2D 
- *  “unboxed” array abstraction. This provides functions to create 
- *  and free a 2D array, query its dimensions and element size, 
- *  access an element by (col, row), and traverse all elements in 
- *  either row-major or column-major order using a apply function.
- * 
- * Key Insight: Although UArray2 behaves like a true 2D grid, it 
- *   is implemented on top of a 1D unboxed UArray (Hanson’s UArray_T). 
- *   Each (col, row) location is mapped to the correct underlying 
- *   storage address, allowing efficient memory use while still 
- *   presenting a clean 2D interface.
+ * Purpose: Defines the public interface for UArray2, a 2D
+ *          "unboxed" array abstraction. This provides functions to
+ *          create and free a 2D array, query its dimensions and
+ *          element size, access an element by (col, row), and
+ *          traverse all elements in either row-major or
+ *          column-major order using an apply function.
+ *
+ * Key Insight: Although UArray2 behaves like a true 2D grid, it
+ *          is implemented on top of a 1D unboxed UArray
+ *          (Hanson's UArray_T). Each (col, row) location is
+ *          mapped to the correct underlying storage address,
+ *          allowing efficient memory use while still presenting
+ *          a clean 2D interface.
  */
- 
+
 #ifndef UARRAY2_INCLUDED
 #define UARRAY2_INCLUDED
 
-
-/* Declare the struct*/
 #define T UArray2_T
 typedef struct T *T;
 
-
 /*
- * name: UArray2_new
- * purpose: Allocate and return a new 2D unboxed array with the 
- * given width, height, and element size.
+ * UArray2_new
  *
- * parameters:
- * width  - number of columns in the array; must be > 0
- * height - number of rows in the array; must be > 0
- * size   - size (in bytes) of each element; must be > 0
+ * Allocates and returns a new 2D unboxed array with the given
+ * width, height, and element size. All elements are initialized
+ * to zero bytes. The caller is responsible for freeing the
+ * returned array by calling UArray2_free.
  *
- * returns:
- * A new UArray2_T representing a width-by-height grid of elements.
+ * Parameters:
+ *   width  - number of columns in the array; must be > 0
+ *   height - number of rows in the array; must be > 0
+ *   size   - size (in bytes) of each element; must be > 0
  *
- * checked runtime errors (CRE):
- * Raises a CRE if width <= 0, height <= 0, or size <= 0.
- * Raises a CRE if any required memory allocation fails (for the UArray2
- * struct or the underlying storage).
+ * Returns: A new UArray2_T representing a width-by-height grid.
+ *
+ * CRE: width <= 0, height <= 0, or size <= 0.
+ * CRE: memory allocation failure.
  */
 extern T UArray2_new(int width, int height, int size);
 
-
 /*
- * name: *UArray2_at
- * purpose: It allocates the index position (col, row) of an elemenent
- * parameters: T uarray2 - the uarray2_T to access the data, 
- *             int col - column index, and int row - row index
- * return:  A pointer element poin the uarray2   
- * effect: It returns a pointer to the elemment at position (col,row)
+ * UArray2_free
+ *
+ * Deallocates all memory associated with *uarray2 and sets
+ * *uarray2 to NULL. The caller relinquishes ownership of the
+ * array.
+ *
+ * Parameters:
+ *   uarray2 - pointer to the UArray2_T to free
+ *
+ * CRE: uarray2 is NULL or *uarray2 is NULL.
  */
-extern void *UArray2_at(T uarray2, int col, int row);
-
-
-/*
- * name: UArray2_height
- * purpose: It tells the height of the 2D array
- * parameters: T uarray2 - the uarray2_T to access the data
- * return: It returns the height of the 2D array
- * effect: It accesses the height of the 2D array from the struct
- */
-extern int UArray2_height(T uarray2);
-
+extern void UArray2_free(T *uarray2);
 
 /*
- * name: UArray2_size
- * purpose: returns the stored size metadata of the struct
- * parameters: T uarray2 - 2D uarray
- * return: the byte size of the uarray2
- * effect: It accesses the size of each element in the 2D array 
- *         from the struct
- */
-extern int UArray2_size(T uarray2);
-
-
-/*
- * name: UArray2_width
- * purpose: It tells us the width of the 2D array
- * parameters: T uarray2 - the uarray2D whose data being accessed
- * return: return the width metadata of the uarray2
- * effect: It accesses the width of the 2D array from the struct
+ * UArray2_width
+ *
+ * Returns the width (number of columns) of the array.
+ *
+ * Parameters:
+ *   uarray2 - the array to query
+ *
+ * Returns: The width passed to UArray2_new.
+ *
+ * CRE: uarray2 is NULL.
  */
 extern int UArray2_width(T uarray2);
 
+/*
+ * UArray2_height
+ *
+ * Returns the height (number of rows) of the array.
+ *
+ * Parameters:
+ *   uarray2 - the array to query
+ *
+ * Returns: The height passed to UArray2_new.
+ *
+ * CRE: uarray2 is NULL.
+ */
+extern int UArray2_height(T uarray2);
 
 /*
- * name: UArray2_free
- * purpose: It deallocates the memory of the uarray2 
- * parameters: T *uarray2 - pointer to the uarray2_T to free 
- * return: void
- * effect: It frees the memory allocated the uarray2 
+ * UArray2_size
+ *
+ * Returns the size (in bytes) of each element in the array.
+ *
+ * Parameters:
+ *   uarray2 - the array to query
+ *
+ * Returns: The element size passed to UArray2_new.
+ *
+ * CRE: uarray2 is NULL.
  */
-extern void* UArray2_free(T *uarray2);
-
+extern int UArray2_size(T uarray2);
 
 /*
- * name: UArray2_applyfun
- * purpose: It is a function that that applies the function type for the 
- *          mapping operation
- * parameters: int col, int row, T uarray2, void *elem, void *cl
- * return: void 
- * effect: It applies the the function mapping to both map_col_major and
- *         map_row_major
+ * UArray2_at
+ *
+ * Returns a pointer to the element at position (col, row).
+ * The caller casts and dereferences this pointer to read or
+ * write. The returned pointer is valid until UArray2_free is
+ * called.
+ *
+ * Parameters:
+ *   uarray2 - the array
+ *   col     - column index (0 <= col < width)
+ *   row     - row index (0 <= row < height)
+ *
+ * Returns: void pointer to the element at (col, row).
+ *
+ * CRE: uarray2 is NULL.
+ * CRE: col or row is out of bounds.
  */
-typedef void UArray2_applyfun(int col, int row, T uarray2, void *elem, 
-                              void *cl);
-
+extern void *UArray2_at(T uarray2, int col, int row);
 
 /*
- * name: UArray2_map_col_major
- * purpose: It applies the apply function in column-major order 
- * parameters: T uarray2 - the 2D uarray, UArray2-applyfun *apply - 
- *             function pointer, void *cl - closure
- * return: void 
- * effect: It traverses the 2D array in column-major order and applies 
+ * UArray2_applyfun
+ *
+ * Function pointer type for the apply function used by mapping
+ * operations. Called once for each element in the array.
+ *
+ * Parameters:
+ *   col     - current column index
+ *   row     - current row index
+ *   uarray2 - the array being traversed
+ *   elem    - pointer to current element
+ *   cl      - closure data passed through from the map call
  */
-extern void UArray2_map_col_major(T uarray2, UArray2_applyfun *apply, 
+typedef void UArray2_applyfun(int col, int row, T uarray2,
+                              void *elem, void *cl);
+
+/*
+ * UArray2_map_col_major
+ *
+ * Calls the apply function for each element in column-major
+ * order: all rows of column 0, then column 1, etc.
+ *
+ * Parameters:
+ *   uarray2 - the array to traverse
+ *   apply   - function to call for each element
+ *   cl      - closure passed to each apply call
+ *
+ * CRE: uarray2 is NULL or apply is NULL.
+ */
+extern void UArray2_map_col_major(T uarray2,
+                                  UArray2_applyfun *apply,
                                   void *cl);
 
-
 /*
- * name: UArray2_map_row_major
- * purpose: It applies the apply function in row-major order 
- * parameters: T uarray2 - the 2D uarray, UArray2-applyfun apply 
- *             - function pointer, void *cl - closure 
- * return: void 
- * effect: It traverses the 2D array in row-major order and applies
+ * UArray2_map_row_major
+ *
+ * Calls the apply function for each element in row-major
+ * order: all columns of row 0, then row 1, etc.
+ *
+ * Parameters:
+ *   uarray2 - the array to traverse
+ *   apply   - function to call for each element
+ *   cl      - closure passed to each apply call
+ *
+ * CRE: uarray2 is NULL or apply is NULL.
  */
-extern void UArray2_map_row_major(T uarray2, UArray2_applyfun, void *cl);
-
+extern void UArray2_map_row_major(T uarray2,
+                                  UArray2_applyfun *apply,
+                                  void *cl);
 
 #undef T
-#endif // UARRAY2_INCLUDED
+#endif
