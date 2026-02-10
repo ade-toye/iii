@@ -175,7 +175,8 @@ void apply(int col, int row, UArray2_T a, void *elem, void *cl);
 
 ### Implementation Strategy
 
-The 2D array is implemented using a single flattened 1D UArray in **row-major order**:
+The 2D array is implemented using a single flattened 1D UArray in
+**row-major order**:
 
 ```
 Element at (col, row) -> index = row * width + col
