@@ -42,13 +42,19 @@ typedef struct Queue {
 } Queue;
 
 /*
- * Queue_new
+ * name: Queue_new
  *
- * Allocates and returns a new empty queue. The front and rear
- * pointers are initialized to NULL. The caller is responsible
- * for freeing the queue via Queue_free.
+ * description: Creates and returns a new empty queue. The queue
+ * has no elements when first created. The caller is responsible
+ * for freeing the queue by calling Queue_free.
  *
- * CRE: memory allocation failure.
+ * Parameters:
+ *   none
+ *
+ * Returns:
+ *   A pointer to a newly allocated empty queue
+ *
+ * CRE: Memory allocation fails (program will crash).
  */
 static Queue *Queue_new(void)
 {
@@ -60,12 +66,18 @@ static Queue *Queue_new(void)
 }
 
 /*
- * Queue_empty
+ * name: Queue_empty
  *
- * Returns 1 if the queue has no elements (front is NULL),
- * and 0 if the queue has at least one element.
+ * description: Checks if the queue is empty. Returns 1 if empty,
+ * 0 if the queue has at least one element.
  *
- * CRE: None.
+ * Parameters:
+ *   q - pointer to the queue to check
+ *
+ * Returns:
+ *   1 if the queue is empty, 0 if it has elements
+ *
+ * CRE: q is NULL.
  */
 static int Queue_empty(Queue *q)
 {
@@ -73,14 +85,22 @@ static int Queue_empty(Queue *q)
 }
 
 /*
- * Queue_enqueue
+ * name: Queue_enqueue
  *
- * Adds a new node containing the coordinates (col, row) to
- * the rear (back) of the queue. If the queue is empty, the
- * new node becomes both front and rear. Otherwise it is
- * appended to the existing rear.
+ * description: Adds a new position (col, row) to the back of
+ * the queue. If the queue is empty, this becomes the first
+ * element. Otherwise it is added to the end.
  *
- * CRE: memory allocation failure.
+ * Parameters:
+ *   q   - pointer to the queue
+ *   col - column coordinate to add
+ *   row - row coordinate to add
+ *
+ * Returns:
+ *   void
+ *
+ * CRE: q is NULL.
+ * CRE: Memory allocation fails (program will crash).
  */
 static void Queue_enqueue(Queue *q, int col, int row)
 {
@@ -99,14 +119,22 @@ static void Queue_enqueue(Queue *q, int col, int row)
 }
 
 /*
- * Queue_dequeue
+ * name: Queue_dequeue
  *
- * Removes the front element from the queue and stores its
- * col and row coordinates in the pointers provided. The
- * removed node is freed. If the queue becomes empty after
- * removal, rear is set to NULL.
+ * description: Removes and returns the first element from the
+ * queue. The coordinates are stored in the pointers provided.
+ * The removed element is freed from memory.
  *
- * CRE: queue is empty (asserts on this condition).
+ * Parameters:
+ *   q   - pointer to the queue
+ *   col - pointer to store the column coordinate
+ *   row - pointer to store the row coordinate
+ *
+ * Returns:
+ *   void
+ *
+ * CRE: q is NULL.
+ * CRE: The queue is empty.
  */
 static void Queue_dequeue(Queue *q, int *col, int *row)
 {
@@ -124,13 +152,19 @@ static void Queue_dequeue(Queue *q, int *col, int *row)
 }
 
 /*
- * Queue_free
+ * name: Queue_free
  *
- * Removes and frees all remaining nodes in the queue by
- * repeatedly calling Queue_dequeue. Then frees the queue
- * struct itself.
+ * description: Frees all memory used by the queue. All remaining
+ * elements are removed and deleted, then the queue structure
+ * itself is deleted.
  *
- * CRE: None.
+ * Parameters:
+ *   q - pointer to the queue to free
+ *
+ * Returns:
+ *   void
+ *
+ * CRE: q is NULL.
  */
 static void Queue_free(Queue *q)
 {
@@ -142,14 +176,24 @@ static void Queue_free(Queue *q)
 }
 
 /*
- * enqueue_if_black
+ * name: enqueue_if_black
  *
- * Checks if (col, row) is within the bitmap bounds and if
- * the pixel at that location is black (value 1). If both
- * conditions are true, sets the pixel to white (0) and
- * enqueues the coordinates in the queue.
+ * description: Checks if a pixel at the given position is black.
+ * If the position is in bounds and the pixel is black (value 1),
+ * it changes the pixel to white (0) and adds the position to
+ * the queue.
  *
- * CRE: None.
+ * Parameters:
+ *   q      - pointer to the queue
+ *   bitmap - the bitmap image
+ *   col    - column coordinate to check
+ *   row    - row coordinate to check
+ *
+ * Returns:
+ *   void
+ *
+ * CRE: q is NULL.
+ * CRE: bitmap is NULL.
  */
 static void enqueue_if_black(Queue *q, Bit2_T bitmap,
                               int col, int row)
@@ -169,16 +213,22 @@ static void enqueue_if_black(Queue *q, Bit2_T bitmap,
 }
 
 /*
- * remove_black_edges
+ * name: remove_black_edges
  *
- * Performs a breadth-first search (BFS) starting from all
- * black pixels on the bitmap border. For each black pixel
- * found, it is turned white and its 4-connected neighbors
- * (up, down, left, right) are checked. This removes all
- * black pixels connected to the edge. Interior black regions
- * not touching the border are preserved.
+ * description: Removes black pixels that connect to the image
+ * border. Starting from black pixels on all four edges, it
+ * spreads inward through neighbors that are also black, turning
+ * each to white. Black regions completely surrounded by white
+ * pixels are left unchanged.
  *
- * CRE: bitmap dimensions are <= 0.
+ * Parameters:
+ *   bitmap - the bitmap image to process
+ *
+ * Returns:
+ *   void
+ *
+ * CRE: bitmap is NULL.
+ * CRE: bitmap width or height is less than 1.
  */
 static void remove_black_edges(Bit2_T bitmap)
 {
@@ -210,15 +260,19 @@ static void remove_black_edges(Bit2_T bitmap)
 }
 
 /*
- * print_pbm
+ * name: print_pbm
  *
- * Writes the bitmap to standard output in P1 PBM format.
- * The output begins with "P1" (plain PBM magic number),
- * followed by width and height on one line, then each row
- * of bits separated by single spaces, with rows on separate
- * lines.
+ * description: Outputs the bitmap to the screen in plain PBM
+ * format (P1). Each row of pixels is printed on its own line,
+ * with pixel values separated by spaces.
  *
- * CRE: None.
+ * Parameters:
+ *   bitmap - the bitmap image to print
+ *
+ * Returns:
+ *   void
+ *
+ * CRE: bitmap is NULL.
  */
 static void print_pbm(Bit2_T bitmap)
 {
@@ -240,14 +294,20 @@ static void print_pbm(Bit2_T bitmap)
 }
 
 /*
- * main
+ * name: main
  *
- * Reads a PBM image from a file (if provided as argument)
- * or from standard input. Creates a bitmap and loads all
- * pixels. Calls remove_black_edges to remove edge pixels,
- * then prints the result in P1 PBM format. Accepts 0 or 1
- * command-line argument. With 0 args uses stdin, with 1 arg
- * opens that file.
+ * description: Reads a bitmap image and removes black pixels
+ * connected to the image borders. The image is read from a file
+ * (if a filename is provided) or from standard input. After
+ * processing, the result is printed as a plain PBM image.
+ *
+ * Parameters:
+ *   argc - number of command-line arguments (must be 1 or 2)
+ *   argv - array of command-line arguments (optional filename)
+ *
+ * Returns:
+ *   EXIT_SUCCESS if image is processed successfully,
+ *   EXIT_FAILURE if arguments are invalid
  *
  * CRE: more than 1 command-line argument provided.
  * CRE: file cannot be opened for reading.

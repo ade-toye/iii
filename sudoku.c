@@ -26,12 +26,20 @@
 #define BOX 3
 
 /*
- * clean_close
+ * name: clean_close
  *
- * Frees the UArray2 board by dereferencing the pointer.
- * Frees the Pnmrdr reader. If the file pointer is not stdin,
- * closes the file. Called before every program exit to ensure
- * all resources are released and prevent memory leaks.
+ * description: Cleans up and releases all allocated resources
+ * before the program exits. Frees the board array, frees the
+ * reader object, and closes the file (unless it is stdin).
+ * This prevents memory leaks.
+ *
+ * Parameters:
+ *   board  - UArray2 containing the sudoku puzzle
+ *   reader - Pnmrdr object used to read the file
+ *   fp     - File pointer to the input file
+ *
+ * Returns:
+ *   void
  *
  * CRE: board, reader, or fp are NULL.
  */
@@ -46,13 +54,19 @@ static void clean_close(UArray2_T board, Pnmrdr_T reader,
 }
 
 /*
- * validate_col
+ * name: validate_col
  *
- * Checks whether column col contains all digits 1 through 9
- * with no duplicates and no out-of-range values. Uses a seen
- * array to track which digits have been encountered. Returns
- * true if the column is valid, false if any digit is invalid
- * or repeated.
+ * description: Checks if a column in the sudoku board is valid.
+ * A valid column must have all digits 1-9 appearing exactly once
+ * with no repeats and no values outside the 1-9 range.
+ *
+ * Parameters:
+ *   board - UArray2 containing the sudoku puzzle
+ *   col   - column number to check (0-8)
+ *
+ * Returns:
+ *   true if the column is valid, false if any digit repeats,
+ *   is out of range, or missing from the column
  *
  * CRE: col < 0 or col >= DIM.
  * CRE: board is NULL or not fully initialized.
@@ -71,13 +85,19 @@ static bool validate_col(UArray2_T board, int col)
 }
 
 /*
- * validate_row
+ * name: validate_row
  *
- * Checks whether row row contains all digits 1 through 9
- * with no duplicates and no out-of-range values. Uses a seen
- * array to track which digits have been encountered. Returns
- * true if the row is valid, false if any digit is invalid
- * or repeated.
+ * description: Checks if a row in the sudoku board is valid.
+ * A valid row must have all digits 1-9 appearing exactly once
+ * with no repeats and no values outside the 1-9 range.
+ *
+ * Parameters:
+ *   board - UArray2 containing the sudoku puzzle
+ *   row   - row number to check (0-8)
+ *
+ * Returns:
+ *   true if the row is valid, false if any digit repeats,
+ *   is out of range, or missing from the row
  *
  * CRE: row < 0 or row >= DIM.
  * CRE: board is NULL or not fully initialized.
@@ -96,14 +116,21 @@ static bool validate_row(UArray2_T board, int row)
 }
 
 /*
- * validate_box
+ * name: validate_box
  *
- * Checks whether the 3x3 sub-grid at position (box_row,
- * box_col) contains all digits 1 through 9 with no duplicates
- * and no out-of-range values. The box starts at pixel
- * (box_col * 3, box_row * 3). Uses a seen array to track
- * which digits have been encountered. Returns true if valid,
- * false otherwise.
+ * description: Checks if a 3x3 box in the sudoku board is valid.
+ * A valid box must have all digits 1-9 appearing exactly once with
+ * no repeats and no values outside the 1-9 range. The box to check
+ * is identified by its position in the 3x3 grid of boxes.
+ *
+ * Parameters:
+ *   board    - UArray2 containing the sudoku puzzle
+ *   box_row  - row position of the box (0-2)
+ *   box_col  - column position of the box (0-2)
+ *
+ * Returns:
+ *   true if the box is valid, false if any digit repeats,
+ *   is out of range, or missing from the box
  *
  * CRE: box_row < 0 or box_row >= BOX (3).
  * CRE: box_col < 0 or box_col >= BOX (3).
@@ -132,16 +159,21 @@ static bool validate_box(UArray2_T board, int box_row,
 }
 
 /*
- * main
+ * name: main
  *
- * Reads a 9x9 graymap (PGM) file from a file (if provided as
- * argument) or from stdin. Loads all pixel values as digits.
- * Validates that all 9 rows contain 1-9 with no duplicates.
- * Validates that all 9 columns contain 1-9 with no duplicates.
- * Validates that all nine 3x3 boxes contain 1-9 with no
- * duplicates. Returns EXIT_SUCCESS (0) if all validations pass,
- * EXIT_FAILURE (1) if any validation fails. Accepts 0 or 1
- * command-line argument.
+ * description: Reads a sudoku puzzle from an image file and checks
+ * if it is a valid solved sudoku. The image must be a 9x9 grayscale
+ * image (PGM format) where pixel values are the sudoku digits. For
+ * each row, column, and 3x3 box, the program checks that all digits
+ * 1-9 appear exactly once with no repeats.
+ *
+ * Parameters:
+ *   argc - number of command-line arguments (must be 1 or 2)
+ *   argv - array of command-line arguments (optional filename)
+ *
+ * Returns:
+ *   EXIT_SUCCESS (0) if sudoku is valid and fully solved,
+ *   EXIT_FAILURE (1) if sudoku is invalid or has duplicates
  *
  * CRE: more than 1 command-line argument provided.
  * CRE: input file cannot be opened.
